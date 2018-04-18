@@ -13,18 +13,18 @@ public:
 private:
 
     class StateOne : public State<ExampleObject> {
-    public:
-        void OnEntry();
-        void OnUpdate();
-        void OnExit();
+    private:
+        void OnEntry() override;
+        void OnUpdate() override;
+        void OnExit() override;
     };
 
     class StateTwo : public State<ExampleObject> {
-    public:
-        void OnEntry();
-        void OnUpdate();
-        void OnExit();
     private:
+        void OnEntry() override;
+        void OnUpdate() override;
+        void OnExit() override;
+
         bool boolean;
     };
 

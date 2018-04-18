@@ -25,7 +25,7 @@ public:
     /**
     */
     template <class S>
-    S* CreateState(T* a_owner);
+    void CreateState(S** a_state_pointer, T* a_owner);
 
 	/**
 	*/
@@ -54,8 +54,8 @@ public:
 
 private:
 
-	std::vector<State<T>*> state_stack_;    /**< All the states that this StateMachine holds. */
-    std::vector<State<T>*> tracked_states_; /**< All the states tracked by this StateMachine. */ 
+	std::vector<State<T>*> state_stack_;    /**< All the states that this StateMachine currently holds in its stack memory. */
+    std::vector<State<T>*> tracked_states_; /**< All the states tracked by this StateMachine. These states will get deleted on destroy of the state machine */ 
 
 };
 
@@ -94,15 +94,16 @@ inline void StateMachine<T>::Update() const {
 
 template <class T>
 template <class S>
-inline S* StateMachine<T>::CreateState(T* a_owner) {
+inline void StateMachine<T>::CreateState(S** a_state_pointer, T* a_owner) {
     // Check if the state already has been created ~ If not create it.
     if (S* state = GetState<S>()) {
-        return state; // State already exists ~ Return pointer to it.
+        (*a_state_pointer) = state;
+        return; // State already exists ~ Return pointer to it.
     } else {
-        state = new S();
-        state->Construct(a_owner);
-        this->tracked_states_.push_back(state);
-        return state;
+        (*a_state_pointer) = new S();
+        (*a_state_pointer)->Construct(a_owner, this);
+        this->tracked_states_.push_back(*a_state_pointer);
+        return;
     }
 
 }

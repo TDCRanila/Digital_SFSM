@@ -8,8 +8,8 @@ ExampleObject::~ExampleObject() { /*EMPTY*/ }
 
 void ExampleObject::Oncreate() {
     // Create the states.
-    state_one_ = state_machine_.CreateState<StateOne>(this);
-    state_two_ = state_machine_.CreateState<StateTwo>(this);
+    state_machine_.CreateState(&this->state_one_, this);
+    state_machine_.CreateState(&this->state_two_, this);
 
     // Push Intial State.
     state_machine_.PushState(state_one_);
@@ -17,7 +17,7 @@ void ExampleObject::Oncreate() {
 
 void ExampleObject::Update() {
     // Update the State Machine.h
-    UPDATE_STATEMACHINE(state_machine_);
+    UPDATE_STATEMACHINE(this->state_machine_);
 }
 
 void ExampleObject::StateOne::OnEntry() {
@@ -26,7 +26,7 @@ void ExampleObject::StateOne::OnEntry() {
 
 void ExampleObject::StateOne::OnUpdate() {
     std::cout << "StateOne-OnUpdate()" << std::endl;
-    this->GetOwner()->state_machine_.PushState(this->GetOwner()->state_two_);
+    this->GetFSM()->PushState(this->GetOwner()->state_two_);
 }
 
 void ExampleObject::StateOne::OnExit() {
@@ -41,10 +41,10 @@ void ExampleObject::StateTwo::OnUpdate() {
     std::cout << "StateTwo-OnUpdate()" << std::endl;
     if (boolean) {
         boolean = false;
-        this->GetOwner()->state_machine_.PopState();
+        this->GetFSM()->PopState();
     } else {
         boolean = true;
-        this->GetOwner()->state_machine_.PopState();
+        this->GetFSM()->PopState();
     }
 }
 
