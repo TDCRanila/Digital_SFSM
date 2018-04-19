@@ -55,6 +55,31 @@ public:
 	void Update() const;
 
     /**
+    *   Function locks or unlocks the StateMachine. Locking will prevent any changes being made for this StateMachine.
+    *   Pushing, Popping, and Clearing of states will be prevented when locked.
+    *   \param bool a_enabled Boolean specifies whether the StateMachine should be locked or not.
+    */
+    void SetLocked(bool a_locked);
+
+    /**
+    *   Function returns a boolean specifing whether the StateMachine is locked or not.
+    *   \return bool Returns True ~ if the StateMachine is locked. False ~ if it isn't locked.
+    */
+    bool IsLocked() const;
+
+    /**
+    *   Function enables or disables the StateMachine. Disabling it will prevent it from updating.
+    *   \param bool a_enabled Boolean specifies whether the StateMachine should be enabled or not.
+    */
+    void SetEnabled(bool a_enabled);
+
+    /**
+    *   Function returns a boolean specifing whether the StateMachine is disabled or not.
+    *   \return bool Returns True ~ if the StateMachine is enabled. False ~ if it is disabled.
+    */
+    bool IsEnabled() const;
+
+    /**
     *   Allocates/Creates a State for this StateMachine. The created State will be tracked by the StateMachine.
     *   \tparam S* a_state_pointer Pointer to a State pointer.
     *   \tparam T* a_owner Pointer to the owner of the State (pointer).
@@ -107,7 +132,7 @@ public:
     std::vector<S*> GetStatesByType() const;
 
     /**
-    *   \Function returns a State with the specified index on the stack.
+    *   Function returns a State with the specified index on the stack.
     *   \note If it cannot find a State with this index, it returns nullptr. (For instance, vector out of range or negative number.)
     *   \param size_t a_index Index that you want to search for in the stack.
     *   \return Pointer to the State with this index.
@@ -115,6 +140,9 @@ public:
     State<T>* GetStateByIndex(size_t a_index) const;
 
 private:
+
+    bool enabled_;                          /**< Boolean specifies whether the StateMachine is enabled or not. */
+    bool locked_;                           /**< Boolean specifies whether the StateMachine is locked or not. */
 
 	std::vector<State<T>*> state_stack_;    /**< Vector of all the states that this StateMachine currently holds in its stack memory. */
     std::vector<State<T>*> tracked_states_; /**< Vector of all states tracked by this StateMachine. These states will get deleted on destroy of the state machine */ 
@@ -138,7 +166,9 @@ if (a_state_machine != nullptr) {               \
 #pragma region Implementation - StateMachine
 
 template <class T>
-inline StateMachine<T>::StateMachine() {
+inline StateMachine<T>::StateMachine() :
+    enabled_(true)
+{
     /* Empty */
 }
 
@@ -155,10 +185,31 @@ inline StateMachine<T>::~StateMachine() {
 
 template <class T>
 inline void StateMachine<T>::Update() const {
-    // Update ~ Only if we have a valid state on the stack.
+    // Update ~ Only if the StateMachine is enabled and if there is a valid state on the stack.
+    if (!enabled_) { return; }
     if (State<T>* current_state = GetCurrentState()) {
         current_state->OnUpdate();
     }
+}
+
+template <class T>
+inline void StateMachine<T>::SetLocked(bool a_locked) {
+    this->locked_ = a_locked;
+}
+
+template <class T>
+inline bool StateMachine<T>::IsLocked() const {
+    return this->locked_;
+}
+
+template <class T>
+inline void StateMachine<T>::SetEnabled(bool a_enabled) {
+    this->enabled_ = a_enabled;
+}
+
+template <class T>
+inline bool StateMachine<T>::IsEnabled() const {
+    return this->enabled_;
 }
 
 template <class T>
@@ -179,6 +230,9 @@ inline void StateMachine<T>::CreateState(S** a_state_pointer, T* a_owner) {
 
 template <class T>
 inline void StateMachine<T>::PushState(State<T>* a_state, bool a_call_exit, bool a_call_entry) {
+    // Check if locked
+    if (this->locked_) { return; }
+
 	// Old State ~ Call OnExit()
 	if ((a_call_exit) && (!state_stack_.empty())) {
 		State<T>* exit_state = this->state_stack_.back();
@@ -196,6 +250,9 @@ inline void StateMachine<T>::PushState(State<T>* a_state, bool a_call_exit, bool
 
 template <class T>
 inline void StateMachine<T>::PopState(bool a_call_exit, bool a_call_entry) {
+    // Check if locked
+    if (this->locked_) { return; }
+
     // Check ~ Don't pop if there are no states on the stack.
 	if (this->state_stack_.empty()) { return; }
 	
@@ -220,6 +277,9 @@ inline void StateMachine<T>::PopState(bool a_call_exit, bool a_call_entry) {
 
 template <class T>
 inline void StateMachine<T>::ClearStateStack() const {
+    // Check if locked
+    if (this->locked_) { return; }
+
     this->state_stack_.clear();
 }
 
