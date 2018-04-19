@@ -24,6 +24,10 @@
 *   OnExit();   Gets called whenever a State gets popped off the stack of the StateMachine.
 *
 */
+
+template <class T>
+class StateMachine;
+
 template <class T>
 class State {
 private:
@@ -42,10 +46,10 @@ protected:
     */
     virtual ~State();
 
-	/**
+    /**
     *   Function returns a pointer to the owner.
     *   \return Pointer to the owner.
-	*/
+    */
     T* GetOwner() const;
 
     /**

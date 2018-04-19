@@ -98,10 +98,11 @@ public:
 
     /**
     *   \Function returns a State with the specified index on the stack.
-    *   \note If it cannot find a State with this index, it returns nullptr. (For instance, vector out of range.)
+    *   \note If it cannot find a State with this index, it returns nullptr. (For instance, vector out of range or negative number.)
+    *   \param size_t a_index Index that you want to search for in the stack.
     *   \return Pointer to the State with this index.
     */
-    State<T>* GetStateByIndex(int a_index) const;
+    State<T>* GetStateByIndex(size_t a_index) const;
 
 private:
 
@@ -234,7 +235,7 @@ inline S* StateMachine<T>::GetState() const {
 }
 
 template <class T>
-inline State<T>* StateMachine<T>::GetStateByIndex(int a_index) const {
+inline State<T>* StateMachine<T>::GetStateByIndex(size_t a_index) const {
     if (a_index > this->state_stack_.size()) {
         return nullptr;
     } else {
