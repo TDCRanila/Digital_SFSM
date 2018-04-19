@@ -4,6 +4,37 @@
 
 #include <State.h>
 
+/**
+*   \file FiniteStateMachine.h
+*
+*   This file contains the implentation of the StateMachine class.
+*
+*   \author TDCRanila/Chan
+*   \version 1.0
+*
+*/
+
+/**
+*   \class StateMachine
+*   \bug No known bugs to be reported.
+*
+*   \pre Use UPDATE_STATEMACHINE or Update(), to update the StateMachine class.
+*   \pre StateMachine is a templated class, so make sure you specify the type. Type should be the owner of this StateMachine.
+*   
+*   \brief StateMachine Class is where the main implementation of the finite state machine lies.
+*   The StateMachine manages/controls/updates the states that it owns.
+*
+*   The StateMachine contains memory of pushed/popped states. (The Stack)
+*   Whenever the StateMachine gets updated, the topmost State gets updated.
+*   When the stack is empty, no states will be updated.
+*
+*   When pushing a State, the State will be added on the top of the stack.
+*   When popping a State, the topmost State will be removed from the stack.
+*   
+*   \note The stack of the StateMachine only holds pointers to states.
+*   \note When creating new states, the State Machine keeps track of them and will eventually delete its tracked states whenever the StateMachine gets deleted.
+*
+*/
 template <class T>
 class StateMachine final {
 public:
@@ -11,57 +42,79 @@ public:
 	/** 
     *   Default StateMachine Constructor 
     */
-	StateMachine()	{ /* Empty */ }
+    StateMachine();
 
 	/** 
-    *   Default StateMachine Destructor
+    *   Default StateMachine Destructor ~ Deletes all tracked states.
     */
     ~StateMachine();
 
 	/** 
+    *   Function updates the current/latest State on the stack.
 	*/
 	void Update() const;
 
     /**
+    *   Allocates/Creates a State for this StateMachine. The created State will be tracked by the StateMachine.
+    *   \tparam S* a_state_pointer Pointer to a State pointer.
+    *   \tparam T* a_owner Pointer to the owner of the State (pointer).
     */
     template <class S>
     void CreateState(S** a_state_pointer, T* a_owner);
 
 	/**
+    *   Function pushes a State on top of the stack. Also calls the entry/exit functions of the states.
+    *   \param State* a_state Pointer to the State that you want to push on the stack.
+    *   \param bool a_call_exit If True ~ Calls the OnExit() function of the previous State. If False ~ Ignores the call.
+    *   \param bool a_call_entry If True ~ Calls the OnEntry() function of the newly pushed State. If False ~ Ignores the call.
 	*/
-	void PushState(State<T>* a_state, bool a_caLL_exit = true, bool a_call_entry = true);
+	void PushState(State<T>* a_state, bool a_call_exit = true, bool a_call_entry = true);
 
 	/**
+    *   Function removes the topmost State of the stack. Also calls the entry/exit functions of the states.
+    *   \param bool a_call_exit If True ~ Calls the OnExit() function of the State that is going to be removed from the stack. If False ~ Ignores the call.
+    *   \param bool a_call_entry If True ~ Calls the OnEntry() function of the new topmost State on the stack. If False ~ Ignores the call.
 	*/
 	void PopState(bool a_call_exit = true, bool a_call_entry = true);
 
     /**
+    *   Function clears the whole stack of the StateMachine.
+    *   \note Doesn't deallocate the states. Only removes the pointer of the states of stacks.
     */
     void ClearStateStack() const;
 
     /**
+    *   Function returns the topmost State on the stack of the StateMachine.
+    *   \return Pointer to the State.
     */
     State<T>* GetCurrentState() const;
 
     /**
+    *   Function returns a specfied State with the template parameters.
+    *   \return Pointer to the specified State type.
     */
     template <class S>
     S* GetState() const;
 
     /**
+    *   \Function returns a State with the specified index on the stack.
+    *   \note If it cannot find a State with this index, it returns nullptr. (For instance, vector out of range.)
+    *   \return Pointer to the State with this index.
     */
     State<T>* GetStateByIndex(int a_index) const;
 
 private:
 
-	std::vector<State<T>*> state_stack_;    /**< All the states that this StateMachine currently holds in its stack memory. */
-    std::vector<State<T>*> tracked_states_; /**< All the states tracked by this StateMachine. These states will get deleted on destroy of the state machine */ 
+	std::vector<State<T>*> state_stack_;    /**< Vector of all the states that this StateMachine currently holds in its stack memory. */
+    std::vector<State<T>*> tracked_states_; /**< Vector of all states tracked by this StateMachine. These states will get deleted on destroy of the state machine */ 
 
 };
 
 #pragma region Macros
 
 #define UPDATE_STATEMACHINE(a_state_machine) a_state_machine.Update();
+
+#define NEW_STATEMACHINE(a_state_machine) a_state_machine = new StateMachine();
 
 #define DESTROY_STATEMACHINE(a_state_machine)   \
 if (a_state_machine != nullptr) {               \
@@ -74,8 +127,13 @@ if (a_state_machine != nullptr) {               \
 #pragma region Implementation - StateMachine
 
 template <class T>
+inline StateMachine<T>::StateMachine() {
+    /* Empty */
+}
+
+template <class T>
 inline StateMachine<T>::~StateMachine() {
-    // Delete all tracked states;
+    // Delete all tracked states.
     for (auto& state : tracked_states_) {
         if (state != nullptr) {
             delete state;
@@ -110,14 +168,14 @@ inline void StateMachine<T>::CreateState(S** a_state_pointer, T* a_owner) {
 
 template <class T>
 inline void StateMachine<T>::PushState(State<T>* a_state, bool a_call_exit, bool a_call_entry) {
-	// Old State ~ Exit 
+	// Old State ~ Call OnExit()
 	if ((a_call_exit) && (!state_stack_.empty())) {
 		State<T>* exit_state = this->state_stack_.back();
 		_ASSERT(exit_state);
         exit_state->OnExit();
 	}
 
-	// New State ~ Entry
+	// New State ~ Calls OnEntry()
 	_ASSERT(a_state);
     this->state_stack_.push_back(a_state);
 	if (a_call_entry) {
