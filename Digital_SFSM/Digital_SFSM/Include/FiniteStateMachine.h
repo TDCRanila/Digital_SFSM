@@ -167,7 +167,8 @@ if (a_state_machine != nullptr) {               \
 
 template <class T>
 inline StateMachine<T>::StateMachine() :
-    enabled_(true)
+    enabled_(true),
+    locked_(false)
 {
     /* Empty */
 }
