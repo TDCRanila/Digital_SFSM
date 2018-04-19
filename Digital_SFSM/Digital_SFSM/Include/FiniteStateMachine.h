@@ -90,11 +90,21 @@ public:
     State<T>* GetCurrentState() const;
 
     /**
-    *   Function returns a specfied State with the template parameters.
+    *   Function returns the specfied State with the template parameters if it is currently present on the stack.
+    *   \note If it isn't present on the stack, function returns nullptr.
+    *   \note If multiple classes of this type are present on the stack. Function returns the first instance that it can find on the stack.
     *   \return Pointer to the specified State type.
     */
     template <class S>
     S* GetState() const;
+
+    /**
+    *   Function returns vector of pointers to the states of the specified type if they are currently present on the stack.
+    *   \note If there are no states of the type present on the stack, function returns an empty vector.
+    *   \return Vector of pointers to the specified State type.
+    */
+    template <class S>
+    std::vector<S*> GetStatesByType() const;
 
     /**
     *   \Function returns a State with the specified index on the stack.
@@ -232,6 +242,19 @@ inline S* StateMachine<T>::GetState() const {
     }
 
     return nullptr;
+}
+
+template <class T>
+template <class S>
+std::vector<S*> StateMachine<T>::GetStatesByType() const {
+    std::vector<S*> temp_vector;
+    for (auto& state_it : state_stack_) {
+        if (S* state = dynamic_cast<S*>(state_it)) {
+            temp_vector.push_back(state);
+        }
+    }
+
+    return temp_vector;
 }
 
 template <class T>
