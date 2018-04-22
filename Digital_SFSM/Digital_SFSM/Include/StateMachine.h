@@ -5,9 +5,9 @@
 #include <State.h>
 
 /**
-*   \file FiniteStateMachine.h
+*   \file StateMachine.h
 *
-*   This file contains the implentation of the StateMachine class.
+*   This file contains the implementation of the StateMachine class.
 *
 *   \author TDCRanila/Chan
 *   \version 1.0
@@ -93,14 +93,14 @@ public:
     *   \param bool a_call_exit If True ~ Calls the OnExit() function of the previous State. If False ~ Ignores the call.
     *   \param bool a_call_entry If True ~ Calls the OnEntry() function of the newly pushed State. If False ~ Ignores the call.
 	*/
-	void PushState(State<T>* a_state, bool a_call_exit = true, bool a_call_entry = true);
+	void PushState(State<T>* a_state, bool a_call_exit = true, bool a_call_entry = true, bool a_call_iffrom = true);
 
 	/**
     *   Function removes the topmost State of the stack. Also calls the entry/exit functions of the states.
     *   \param bool a_call_exit If True ~ Calls the OnExit() function of the State that is going to be removed from the stack. If False ~ Ignores the call.
     *   \param bool a_call_entry If True ~ Calls the OnEntry() function of the new topmost State on the stack. If False ~ Ignores the call.
 	*/
-	void PopState(bool a_call_exit = true, bool a_call_entry = true);
+	void PopState(bool a_call_exit = true, bool a_call_entry = true, bool a_call_iffrom = true);
 
     /**
     *   Function clears the whole stack of the StateMachine.
@@ -216,7 +216,7 @@ inline bool StateMachine<T>::IsEnabled() const {
 template <class T>
 template <class S>
 inline void StateMachine<T>::CreateState(S** a_state_pointer, T* a_owner) {
-    // Check if the state already has been created ~ If not create it.
+    // Check ~ If the state already has been created ~ If not create it.
     if (S* state = GetState<S>()) {
         (*a_state_pointer) = state;
         return; // State already exists ~ Return pointer to it.
@@ -230,55 +230,67 @@ inline void StateMachine<T>::CreateState(S** a_state_pointer, T* a_owner) {
 }
 
 template <class T>
-inline void StateMachine<T>::PushState(State<T>* a_state, bool a_call_exit, bool a_call_entry) {
-    // Check if locked
+inline void StateMachine<T>::PushState(State<T>* a_state, bool a_call_exit, bool a_call_entry, bool a_call_iffrom) {
+    // Check ~ If locked.
     if (this->locked_) { return; }
 
-	// Old State ~ Call OnExit()
+	// Old State ~ Call OnExit().
+    State<T>* exit_state = nullptr;
 	if ((a_call_exit) && (!state_stack_.empty())) {
-		State<T>* exit_state = this->state_stack_.back();
+		exit_state = this->state_stack_.back();
 		_ASSERT(exit_state);
         exit_state->OnExit();
 	}
 
-	// New State ~ Calls OnEntry()
+	// New State ~ Call OnEntry().
 	_ASSERT(a_state);
     this->state_stack_.push_back(a_state);
 	if (a_call_entry) {
         a_state->OnEntry();
 	}
+
+    // New State ~ Call IfFrom().
+    // Check ~ If the previous State is valid.
+    if ((a_call_iffrom) && (exit_state != nullptr)) {
+        a_state->IfFrom(exit_state, true);
+    }
+
 }
 
 template <class T>
-inline void StateMachine<T>::PopState(bool a_call_exit, bool a_call_entry) {
-    // Check if locked
-    if (this->locked_) { return; }
-
+inline void StateMachine<T>::PopState(bool a_call_exit, bool a_call_entry, bool a_call_iffrom) {
+    // Check ~ If locked.
     // Check ~ Don't pop if there are no states on the stack.
-	if (this->state_stack_.empty()) { return; }
+    if ((this->locked_) || (this->state_stack_.empty())) { return; }
 	
-    // Old State ~ Calls OnExit()
+    // Old State ~ Call OnExit().
+    State<T>* exit_state = nullptr;
     if (a_call_exit) {
-		State<T>* exit_state = this->state_stack_.back();
+		exit_state = this->state_stack_.back();
 		_ASSERT(exit_state);
 		exit_state->OnExit();
 	}
 	this->state_stack_.pop_back();
  
-    // Check ~ Don't call OnEntry() when there are no states left on the stack.
+    // Check ~ Don't call OnEntry() & IfFrom() when there are no states left on the stack.
 	if (this->state_stack_.empty()) { return; }
 
-    // New State ~ Calls OnEntry()
+    // New State ~ Call OnEntry()
+    State<T>* entry_state = this->state_stack_.back();
     if (a_call_entry) {
-		State<T>* entry_state = this->state_stack_.back();
 		_ASSERT(entry_state);
         entry_state->OnEntry();
 	}
+
+    // New State ~ Call IfFrom()
+    if (a_call_iffrom) {
+        entry_state->IfFrom(exit_state, false);
+    }
 }
 
 template <class T>
 inline void StateMachine<T>::ClearStateStack() const {
-    // Check if locked
+    // Check ~ If locked.
     if (this->locked_) { return; }
 
     this->state_stack_.clear();

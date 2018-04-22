@@ -3,7 +3,7 @@
 /**
 *   \file State.h
 *
-*   This file contains the implentation of the State class.
+*   This file contains the implementation of the State class.
 *
 *   \author TDCRanila/Chan
 *   \version 1.0
@@ -17,11 +17,13 @@
 *   \pre Since State is an abstract class, make sure to implement the (pure) virtual functions in the derived class.
 *   \pre State is a templated class, so make sure you specify the type. Type should be the owner of this State.
 *
-*   \brief State is an abstract base class. Make sure to implement the following;
+*   \brief State is an abstract base class. Make sure to implement the following if you want to have all the functionality available for use;
 *
 *   OnEntry();  Gets called whenever a State gets pushed to the stack of the StateMachine.
 *   OnUpdate(); Gets called whenever a State gets updated by the StateMachine.
 *   OnExit();   Gets called whenever a State gets popped off the stack of the StateMachine.
+*   IfFrom();   1. Gets called on a new State, whenever an old State gets popped off the stack of the StateMachine.
+*               2. Gets called on an old State, whenever a new State gets pushed on the stack of the StateMachine.
 *
 */
 
@@ -76,9 +78,13 @@ private:
     virtual void OnExit();
 
     /**
-    *
-    *virtual void IfFrom(State* _previousState);
+    *   Virtual IfFrom Function.
+    *   Gets called on a newly created pushed stated or on a new topmost state after a state has been popped.
+    *   \param State* a_previous_state Pointer to the previous State that has been popped or the previous topmost State after a push of a new state.
+    *   \param bool a_push_event Specifies whenever the IfFrom function got called during a Push event or a Pop event. (True == Push; False == Pop)
+    *   \note User has to implement the checking of which State it came from. Function only passes a pointer of the State. 
     */
+    virtual void IfFrom(State<T>* const a_previous_state, bool a_push_event);
 
     /**
     *   Function used to construct the state before proper use.
@@ -115,6 +121,9 @@ inline void State<T>::OnEntry() { /* Empty */ }
 
 template <class T>
 inline void State<T>::OnExit() { /* Empty */ }
+
+template <class T>
+inline void State<T>::IfFrom(State<T>* const /*a_previous_state*/, bool /*a_push_event*/) { /* Empty */ }
 
 template <class T>
 inline void State<T>::Construct(T* const a_owner, StateMachine<T>* const a_owner_state_machine) {

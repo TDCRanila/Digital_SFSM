@@ -1,6 +1,6 @@
 #pragma once
 
-#include <FiniteStateMachine.h>
+#include <StateMachine.h>
 
 class ExampleObject {
 public:
@@ -17,6 +17,8 @@ private:
         void OnEntry() override;
         void OnUpdate() override;
         void OnExit() override;
+        void IfFrom(State<ExampleObject>* const a_previous_state, bool a_push_event) override;
+
     };
 
     class StateTwo : public State<ExampleObject> {
@@ -24,8 +26,9 @@ private:
         void OnEntry() override;
         void OnUpdate() override;
         void OnExit() override;
+        void IfFrom(State<ExampleObject>* const a_previous_state, bool a_push_event) override;
 
-        bool boolean;
+        bool boolean_;
     };
 
     StateOne* state_one_;
