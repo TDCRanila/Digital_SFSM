@@ -8,6 +8,9 @@
 *   \author TDCRanila/Chan
 *   \version 1.0
 *
+*   https://github.com/TDCRanila/Digital_SFSM
+*   https://gitlab.com/TDCRanila/Digital_SFSM
+*
 */
 
 /**
