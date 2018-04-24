@@ -23,7 +23,7 @@ Since this SFSM uses templates, the States can easily get to their Owner class o
 -  _**SetLocked()**_; Locks/Unlocks the StateMachine.
     - When the StateMachine is locked, the StateMachine will continue to update its States, but you cannot Push a State, Pop a State, or Clear the stack, until the StateMachine gets unlocked.
 
-[_Here you can find a code example on how to use the system._](/ExampleProject/Digital_SFSM/Include/ExampleObject.h)
+[_Here you can find a code example on how to use the system._](/ExampleProject/Digital_SFSM)
 
 ---
 
